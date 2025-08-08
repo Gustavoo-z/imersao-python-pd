@@ -260,14 +260,69 @@ fig = px.pie(remoto_contagem,
 fig.update_traces(textinfo='percent+label')
 fig.show()
 
-import plotly.express as px
+pip install pycountry
 
-df_data_scientist = df_limpo[df_limpo['cargo'] == 'Data Scientist']
+import pycountry
 
-df_data_scientist_pais = df_data_scientist.groupby('empresa')['usd'].mean().sort_values(ascending=False).reset_index()
+# Função para converter ISO-2 para ISO-3
+def iso2_to_iso3(code):
+    try:
+        return pycountry.countries.get(alpha_2=code).alpha_3
+    except:
+        return None
 
-fig = px.bar(df_data_scientist_pais, x='empresa', y='usd',
-             title='Média Salarial para Data Scientists por País',
-             labels={'empresa': 'País', 'usd': 'Média Salarial Anual (USD)'})
+# Criar nova coluna com código ISO-3
+df_limpo['residencia_iso3'] = df_limpo['residencia'].apply(iso2_to_iso3)
+
+# Calcular média salarial por país (ISO-3)
+df_ds = df_limpo[df_limpo['cargo'] == 'Data Scientist']
+media_ds_pais = df_ds.groupby('residencia_iso3')['usd'].mean().reset_index()
+
+# Gerar o mapa
+fig = px.choropleth(media_ds_pais,
+                    locations='residencia_iso3',
+                    color='usd',
+                    color_continuous_scale='rdylgn',
+                    title='Salário médio de Cientista de Dados por país',
+                    labels={'usd': 'Salário médio (USD)', 'residencia_iso3': 'País'})
 
 fig.show()
+
+df_limpo.head()
+
+df_limpo.to_csv('dados-imersao-final.csv', index=False)
+
+"""# Construindo um Dashboard com Streamlit
+Aprendendo a usar a biblioteca Steamlit para a criação de um dashboard interativo simples, que permite visualizar dados filtrados e gerar gráficos de forma prática.
+
+1. **Criar o ambiente virtual:**
+
+```bash
+py -m venv .venv
+
+2. **Ativar o ambiente virtual em Windows:**
+
+```bash
+.venv\Scripts\Activate
+
+3. **Ativar o ambiente virtual em MAC/LINUX**
+
+```bash
+source .venv/bin/activate
+
+4. **Criar um arquivo chamado requirements.txt e adicionar os pacotes necessários**
+
+```bash
+pandas==2.2.3
+streamlit==1.44.1
+plotly===5.24.1
+
+5. **Instalar as bibliotecas necessárias**
+
+```bash
+pip install -r requirements.txt
+
+6. **Criar a interface do Dashboard com Streamlit**
+
+7. **Realizar o deploy do Dashboard no Streamlit Cloud: https://streamlit.io/cloud**
+"""
